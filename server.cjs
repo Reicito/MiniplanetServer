@@ -79,7 +79,13 @@ wss.on('connection', ws => {
       broadcastPopulation();
       return;
     }
-    if (message.t === 'rename') {
+    if (message.t === 'buddy_request') {
+      if (!allow(player, 'buddy', 0.2, 2) || typeof message.target !== 'string') return;
+      const recipient = player.room.players.get(message.target);
+      if (!recipient || recipient === player) return;
+      // A targeted notification only. Accept/Decline does not create a friendship yet.
+      send(recipient.ws, { t: 'buddy_request', from: player.id, name: player.name });
+    } else if (message.t === 'rename') {
       if (!allow(player, 'rename', 1, 3)) {
         send(ws, { t: 'renamed_self', name: player.name });
         return;
