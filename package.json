@@ -1,0 +1,8 @@
+{
+  "name": "miniplanet-proof-of-concept-server",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": { "start": "node server.cjs" },
+  "engines": { "node": "22.x" },
+  "dependencies": { "ws": "8.22.0" }
+}
