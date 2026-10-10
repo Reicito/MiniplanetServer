@@ -72,7 +72,18 @@ wss.on('connection', ws => {
       broadcast(room, { t: 'join', player: publicPlayer(player) }, player);
       return;
     }
-    if (message.t === 'move' && allow(player, 'move', 30, 30)) {
+    if (message.t === 'rename') {
+      if (!allow(player, 'rename', 1, 3)) {
+        send(ws, { t: 'renamed_self', name: player.name });
+        return;
+      }
+      if (typeof message.name !== 'string') return;
+      const name = [...message.name.replace(/[\u0000-\u001f\u007f]/g, '').trim()].slice(0, 24).join('');
+      if (!name) { send(ws, { t: 'renamed_self', name: player.name }); return; }
+      player.name = name;
+      send(ws, { t: 'renamed_self', name });
+      broadcast(player.room, { t: 'renamed', id: player.id, name }, player);
+    } else if (message.t === 'move' && allow(player, 'move', 30, 30)) {
       const s = message.s;
       if (!Array.isArray(s) || s.length !== 5 || !s.every(Number.isFinite) || !Number.isInteger(s[4]) || s[4] < 0 || s[4] > 7) return;
       const now = Date.now(), config = player.room.config;
