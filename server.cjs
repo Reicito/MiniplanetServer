@@ -18,6 +18,12 @@ function broadcast(room, data, except) {
   const encoded = JSON.stringify(data);
   for (const player of room.players.values()) if (player !== except) send(player.ws, encoded);
 }
+function broadcastPopulation() {
+  const count = [...rooms.values()].reduce((total, room) => total + room.players.size, 0);
+  const encoded = JSON.stringify({ t: 'population', count });
+  for (const room of rooms.values()) for (const player of room.players.values()) send(player.ws, encoded);
+}
+
 function inside(point, polygon) {
   if (!Array.isArray(point) || point.length !== 2 || !point.every(Number.isFinite)) return false;
   let result = false;
@@ -70,6 +76,7 @@ wss.on('connection', ws => {
       send(ws, { t: 'welcome', id: player.id, name, self: pos, players: [...room.players.values()].map(publicPlayer) });
       room.players.set(player.id, player);
       broadcast(room, { t: 'join', player: publicPlayer(player) }, player);
+      broadcastPopulation();
       return;
     }
     if (message.t === 'rename') {
@@ -113,6 +120,7 @@ wss.on('connection', ws => {
     player.room.players.delete(player.id);
     player.room.dirty.delete(player.id);
     broadcast(player.room, { t: 'leave', id: player.id });
+    broadcastPopulation();
   });
 });
 const tick = setInterval(() => {
